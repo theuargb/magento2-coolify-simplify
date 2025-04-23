@@ -15,10 +15,10 @@
     ],
     "require": {},
     "scripts": {
-        "post-package-install": [
+        "post-install-cmd": [
             "cp -r src ../../../.deployment && cp src/dockerignore.tpl ../../../.dockerignore"
         ],
-        "post-package-update": [
+        "post-update-cmd": [
             "cp -r src ../../../.deployment && cp src/dockerignore.tpl ../../../.dockerignore"
         ]
     }

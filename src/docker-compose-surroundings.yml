@@ -1,7 +1,6 @@
 services:
   db:
     image: ghcr.io/wardenenv/mariadb:10.11
-    container_name: magento-db
     environment:
       MYSQL_ROOT_PASSWORD: ROOT # CHANGE THIS
       MYSQL_DATABASE: magento # Default Magento DB name
@@ -12,22 +11,20 @@ services:
 
   opensearch:
     image: ghcr.io/wardenenv/opensearch:2.16
-    container_name: magento-opensearch
     environment:
       # Required for OpenSearch single-node setup
       - discovery.type=single-node
       # Adjust memory limits as needed
       - "OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m"
+      - "OPENSEARCH_INITIAL_ADMIN_PASSWORD=admin" # CHANGE THIS
     volumes:
       - opensearch_data:/usr/share/opensearch/data
   redis:
     image: ghcr.io/wardenenv/redis:7.4
-    container_name: magento-redis
     # No volume needed for cache unless persistence is strictly required
 
   rabbitmq:
     image: ghcr.io/wardenenv/rabbitmq:3.9
-    container_name: magento-rabbitmq
     environment:
       # Default user/pass: guest/guest - CHANGE THESE FOR PRODUCTION
       RABBITMQ_DEFAULT_USER: guest
