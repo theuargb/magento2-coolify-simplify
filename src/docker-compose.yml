@@ -1,0 +1,35 @@
+services:
+  app:
+    build:
+      context: .. # Build context is the parent directory where Dockerfile is located relative to
+      dockerfile: deployment/Dockerfile # Path to the Dockerfile relative to the context
+    volumes:
+      # Mount the shared pub directory
+      - pub_data:/var/www/html/pub
+      # Mount persistent storage for media, logs, sessions if needed outside pub
+      - var_data:/var/www/html/var
+    environment:
+      PHP_MEMORY_LIMIT: 768M # Adjust as needed
+
+  web:
+    image: nginx:stable-alpine
+    ports:
+      # Expose port 80 within the Docker network; Coolify will map the host port
+      - "80"
+    volumes:
+      # Mount the custom Nginx configuration
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      # Mount the shared pub directory (read-only for Nginx)
+      - pub_data:/var/www/html/pub:ro
+    depends_on:
+      app: # Nginx depends on the app service
+        condition: service_started # Optional: wait for app to start
+      # Note: Nginx doesn't directly depend on db, redis etc.
+    # Labels removed - Coolify will add necessary labels for ingress
+    # Networks will be handled by Docker Compose default or Coolify
+
+volumes:
+  pub_data:
+  var_data:
+
+# Network configuration removed - rely on Docker Compose default or Coolify's management

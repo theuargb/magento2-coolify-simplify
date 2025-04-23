@@ -1,0 +1,69 @@
+services:
+  db:
+    image: ghcr.io/wardenenv/mariadb:10.11
+    container_name: magento-db
+    environment:
+      MYSQL_ROOT_PASSWORD: ROOT # CHANGE THIS
+      MYSQL_DATABASE: magento # Default Magento DB name
+      MYSQL_USER: magento # Default Magento user
+      MYSQL_PASSWORD: magento # CHANGE THIS
+    volumes:
+      - db_data:/var/lib/mysql
+
+  opensearch:
+    image: ghcr.io/wardenenv/opensearch:2.16
+    container_name: magento-opensearch
+    environment:
+      # Required for OpenSearch single-node setup
+      - discovery.type=single-node
+      # Adjust memory limits as needed
+      - "OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m"
+    volumes:
+      - opensearch_data:/usr/share/opensearch/data
+  redis:
+    image: ghcr.io/wardenenv/redis:7.4
+    container_name: magento-redis
+    # No volume needed for cache unless persistence is strictly required
+
+  rabbitmq:
+    image: ghcr.io/wardenenv/rabbitmq:3.9
+    container_name: magento-rabbitmq
+    environment:
+      # Default user/pass: guest/guest - CHANGE THESE FOR PRODUCTION
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    # Add volume if persistence for messages is needed:
+    # volumes:
+    #   - rabbitmq_data:/var/lib/rabbitmq
+  
+  app:
+    # Environment variables for Magento connections (to be used by env.php or setup)
+    environment:
+      DB_HOST: db
+      DB_NAME: magento
+      DB_USER: magento
+      DB_PASSWORD: magento # Ensure this matches surroundings file
+      AMQP_HOST: rabbitmq
+      AMQP_PORT: 5672
+      AMQP_USER: guest # Ensure this matches surroundings file
+      AMQP_PASSWORD: guest # Ensure this matches surroundings file
+      CACHE_HOST: redis
+      CACHE_PORT: 6379
+      PAGE_CACHE_HOST: redis # Can use the same Redis instance
+      PAGE_CACHE_PORT: 6379
+      SEARCH_ENGINE: opensearch # Or elasticsearch7 depending on Magento config
+      SEARCH_HOST: opensearch
+      SEARCH_PORT: 9200
+    depends_on:
+      - db
+      - opensearch
+      - redis
+      - rabbitmq
+
+volumes:
+  db_data:
+    driver: local
+  opensearch_data:
+    driver: local
+  # rabbitmq_data: # Uncomment if volume is added above
+  #   driver: local
